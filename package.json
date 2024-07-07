@@ -1,8 +1,11 @@
 {
   "name": "nodejsgms",
   "version": "1.0.0",
-  "description": "",
+  "description": "GMS backend",
   "main": "index.js",
+   "engines": {
+     "node":"18.x"
+   },
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js"
