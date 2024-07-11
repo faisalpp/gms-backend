@@ -4,10 +4,12 @@ const vehicle = require("../models/vehicle");
 // add Maintanence
 const addMaintanece = async (req, res) => {
   try {
+    console.log(req.body);
     const newMaintanence = new Maintanence(req.body);
     await newMaintanence.save();
     return res.status(200).json({ success: "Maintanence added successfully" });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

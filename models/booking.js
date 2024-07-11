@@ -15,7 +15,7 @@ const BookingSchema = new mongoose.Schema(
       ref: "Driver",
     },
     type_of_vehicle: { type: String, required: true },
-    assigned_booking: { type: String, required: true },
+    assigned_booking: { type: Number, required: true },
     amount: { type: Number, required: true },
     type_of_payment: { type: String, required: true },
   },

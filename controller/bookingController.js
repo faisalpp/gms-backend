@@ -5,12 +5,14 @@ const Vehicle = require("../models/vehicle");
 // add Driver
 const addBooking = async (req, res) => {
   try {
+    console.log(req.body);
     const newBooking = new Booking(req.body);
     await newBooking.save();
     return res
       .status(200)
       .json({ success: "Booking added successfully", booking: newBooking });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -23,6 +25,7 @@ const getBookings = async (req, res) => {
     const Bookings = await Booking.find()
       .populate("select_vehicle")
       .populate("select_driver")
+      .sort({ _id: -1 })
       .exec();
     return res.status(200).json({ Bookings, Vehicles, Drivers });
   } catch (error) {
@@ -47,5 +50,21 @@ const deleteBooking = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+const Messagetext = async (req, res) => {
+  try {
+    const message = await Booking.findById(req.body.id)
+      .populate("select_vehicle")
+      .populate("select_driver");
+    return res.status(200).json({ message });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
-module.exports = { addBooking, getBookings, updateBooking, deleteBooking };
+module.exports = {
+  addBooking,
+  getBookings,
+  updateBooking,
+  deleteBooking,
+  Messagetext,
+};

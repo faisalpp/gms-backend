@@ -52,6 +52,8 @@ router.post("/addBooking", bookingController.addBooking);
 // Get Booking
 router.get("/getBookings", bookingController.getBookings);
 
+router.post("/bookingMessage", bookingController.Messagetext);
+
 // Update Booking
 router.post("/updateBooking", bookingController.updateBooking);
 // Delete Booking
