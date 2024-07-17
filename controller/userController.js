@@ -1,4 +1,8 @@
+const Booking = require("../models/booking");
+const Driver = require("../models/driver");
+const Maintanence = require("../models/maintanence");
 const User = require("../models/user");
+const Vehicle = require("../models/vehicle");
 const bcrypt = require("bcrypt");
 
 const saltRounds = 10;
@@ -119,4 +123,38 @@ const users = async (req, res) => {
   }
 };
 
-module.exports = { addUser, updateUser, users, deleteUser, loginUser, getUser };
+const allData = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findOne({ userId: userId });
+    let Vehicles;
+    let Drivers;
+    let Bookings;
+    let Maintenances;
+    if (user.role == "employee") {
+      Vehicles = await Vehicle.find({ userId: userId });
+      Drivers = await Driver.find({ userId: userId });
+      Bookings = await Booking.find({ userId: userId });
+      Maintenances = await Maintanence.find({ userId: userId });
+    } else {
+      Vehicles = await Vehicle.find();
+      Drivers = await Driver.find();
+      Bookings = await Booking.find();
+      Maintenances = await Maintanence.find();
+    }
+    return res.status(200).json({ Bookings, Vehicles, Drivers, Maintenances });
+  } catch (error) {
+    console.error("Error retrieving items:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+module.exports = {
+  addUser,
+  updateUser,
+  users,
+  deleteUser,
+  loginUser,
+  getUser,
+  allData,
+};

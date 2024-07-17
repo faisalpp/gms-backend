@@ -1,4 +1,5 @@
 const Driver = require("../models/driver");
+const User = require("../models/user");
 
 // add Driver
 const addDriver = async (req, res) => {
@@ -14,7 +15,14 @@ const addDriver = async (req, res) => {
 // Get Driver
 const getDrivers = async (req, res) => {
   try {
-    const Drivers = await Driver.find().sort({ _id: 1 });
+    const userId = req.params.id;
+    const user = await User.findOne({ userId: userId });
+    let Drivers;
+    if (user.role == "employee") {
+      Drivers = await Driver.find({ userId: userId }).sort({ _id: 1 });
+    } else {
+      Drivers = await Driver.find().sort({ _id: 1 });
+    }
     return res.status(200).json({ Drivers });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });

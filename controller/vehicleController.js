@@ -1,3 +1,4 @@
+const User = require("../models/user");
 const Vehicle = require("../models/vehicle");
 
 // add vehicle
@@ -14,7 +15,14 @@ const addVehicle = async (req, res) => {
 // Get Vehicle
 const getVehicles = async (req, res) => {
   try {
-    const Vehicles = await Vehicle.find().sort({ _id: 1 });
+    const userId = req.params.id;
+    const user = await User.findOne({ userId: userId });
+    let Vehicles;
+    if (user.role == "employee") {
+      Vehicles = await Vehicle.find({ userId: userId }).sort({ _id: 1 });
+    } else {
+      Vehicles = await Vehicle.find().sort({ _id: 1 });
+    }
     return res.status(200).json({ Vehicles });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });

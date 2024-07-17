@@ -1,24 +1,39 @@
-const express = require("express");
-const cors = require("cors");
-const router = require("./routes/index");
-const { PORT } = require("./config/index");
-const dbconnect = require("./databse/index");
-const app = express();
+const mongoose = require("mongoose");
+const { MONGODB_CONNECTION_STRING } = require("../config/index");
 
-const corsOptions = {
-  credentials: true,
-  origin: true,
+let cachedConnection = null;
+
+const dbConnect = async () => {
+  try {
+    // If a cached connection exists and it's not closed, return it
+    if (cachedConnection && cachedConnection.readyState === 1) {
+      return cachedConnection;
+    }
+
+    mongoose.set("strictQuery", false);
+
+    // Create a new connection if there is no cached connection or the cached connection is closed
+    const connection = await mongoose.connect(MONGODB_CONNECTION_STRING, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    console.log(`Database connected to host: ${connection.connection.host}`);
+
+    // Store the new connection in the cache
+    cachedConnection = connection;
+
+    // Listen for disconnection events and handle them by removing the cached connection
+    connection.connection.on("disconnected", () => {
+      console.log("Database disconnected.");
+      cachedConnection = null;
+    });
+
+    return connection;
+  } catch (error) {
+    console.error(`Error connecting to the database: ${error}`);
+    throw error;
+  }
 };
 
-// Increase payload size limit for URL-encoded requests
-app.use(express.json());
-
-app.use(cors(corsOptions));
-
-app.use(router);
-
-dbconnect().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server Started on port: ${PORT}`);
-  });
-});
+module.exports = dbConnect;

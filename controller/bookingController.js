@@ -1,5 +1,6 @@
 const Booking = require("../models/booking");
 const Driver = require("../models/driver");
+const User = require("../models/user");
 const Vehicle = require("../models/vehicle");
 
 // add Driver
@@ -20,15 +21,31 @@ const addBooking = async (req, res) => {
 // Get Driver
 const getBookings = async (req, res) => {
   try {
-    const Vehicles = await Vehicle.find().sort({ _id: 1 });
-    const Drivers = await Driver.find().sort({ _id: 1 });
-    const Bookings = await Booking.find()
-      .populate("select_vehicle")
-      .populate("select_driver")
-      .sort({ _id: -1 })
-      .exec();
+    const userId = req.params.id;
+    const user = await User.findOne({ userId: userId });
+    let Vehicles;
+    let Drivers;
+    let Bookings;
+    if (user.role == "employee") {
+      Vehicles = await Vehicle.find({ userId: userId }).sort({ _id: 1 });
+      Drivers = await Driver.find({ userId: userId }).sort({ _id: 1 });
+      Bookings = await Booking.find({ userId: userId })
+        .populate("select_vehicle")
+        .populate("select_driver")
+        .sort({ _id: -1 })
+        .exec();
+    } else {
+      Vehicles = await Vehicle.find().sort({ _id: 1 });
+      Drivers = await Driver.find().sort({ _id: 1 });
+      Bookings = await Booking.find()
+        .populate("select_vehicle")
+        .populate("select_driver")
+        .sort({ _id: -1 })
+        .exec();
+    }
     return res.status(200).json({ Bookings, Vehicles, Drivers });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

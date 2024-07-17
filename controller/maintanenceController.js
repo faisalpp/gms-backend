@@ -1,4 +1,5 @@
 const Maintanence = require("../models/maintanence");
+const User = require("../models/user");
 const vehicle = require("../models/vehicle");
 
 // add Maintanence
@@ -17,12 +18,24 @@ const addMaintanece = async (req, res) => {
 // Get Maintanence
 const getMaintanences = async (req, res) => {
   try {
-    const Vehicles = await vehicle.find().sort({ _id: 1 });
-    const Maintanences = await Maintanence.find()
-      .populate("vehicle")
-      .sort({ _id: 1 });
+    const userId = req.params.id;
+    const user = await User.findOne({ userId: userId });
+    let Vehicles;
+    let Maintanences;
+    if (user.role == "employee") {
+      Vehicles = await vehicle.find({ userId: userId }).sort({ _id: 1 });
+      Maintanences = await Maintanence.find({ userId: userId })
+        .populate("vehicle")
+        .sort({ _id: 1 });
+    } else {
+      Vehicles = await vehicle.find().sort({ _id: 1 });
+      Maintanences = await Maintanence.find()
+        .populate("vehicle")
+        .sort({ _id: 1 });
+    }
     return res.status(200).json({ Maintanences, Vehicles });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
