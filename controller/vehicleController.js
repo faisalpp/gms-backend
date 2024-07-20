@@ -16,11 +16,20 @@ const addVehicle = async (req, res) => {
 const getVehicles = async (req, res) => {
   try {
     const userId = req.params.id;
-    const user = await User.findOne({ userId: userId });
+    const user = await User.findOne({ userId: userId }); // Ensure you use `_id` to find the user by their unique identifier
     let Vehicles;
-    if (user.role == "employee") {
+
+    if (user.role === "employee") {
+      // Employees see only their own vehicles
       Vehicles = await Vehicle.find({ userId: userId }).sort({ _id: 1 });
-    } else {
+    } else if (user.role === "admin") {
+      // Admins see their own vehicles and vehicles of all users they created
+      const usersCreatedByAdmin = await User.find({ refer_id: userId });
+      const userIds = usersCreatedByAdmin.map((user) => user.userId);
+      userIds.push(userId); // Include admin's own userId
+      Vehicles = await Vehicle.find({ userId: userIds }).sort({ _id: 1 });
+    } else if (user.role === "superadmin") {
+      // Superadmins see all vehicles
       Vehicles = await Vehicle.find().sort({ _id: 1 });
     }
     return res.status(200).json({ Vehicles });

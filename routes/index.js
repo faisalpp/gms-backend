@@ -24,7 +24,7 @@ router.post("/updateUser", userController.updateUser);
 router.post("/deleteUser", userController.deleteUser);
 
 // get all users
-router.get("/users", userController.users);
+router.get("/users/:id", userController.users);
 
 // add Vehicle
 router.post("/addVehicle", vehicleController.addVehicle);

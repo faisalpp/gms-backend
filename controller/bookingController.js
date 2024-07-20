@@ -26,7 +26,9 @@ const getBookings = async (req, res) => {
     let Vehicles;
     let Drivers;
     let Bookings;
-    if (user.role == "employee") {
+
+    if (user.role === "employee") {
+      // Employees see only their own data
       Vehicles = await Vehicle.find({ userId: userId }).sort({ _id: 1 });
       Drivers = await Driver.find({ userId: userId }).sort({ _id: 1 });
       Bookings = await Booking.find({ userId: userId })
@@ -34,7 +36,21 @@ const getBookings = async (req, res) => {
         .populate("select_driver")
         .sort({ _id: -1 })
         .exec();
-    } else {
+    } else if (user.role === "admin") {
+      // Admins see their own data and data of all users they created
+      const usersCreatedByAdmin = await User.find({ refer_id: userId });
+      const userIds = usersCreatedByAdmin.map((user) => user.userId);
+      userIds.push(userId); // Include admin's own userId
+
+      Vehicles = await Vehicle.find({ userId: userIds }).sort({ _id: 1 });
+      Drivers = await Driver.find({ userId: userIds }).sort({ _id: 1 });
+      Bookings = await Booking.find({ userId: userIds })
+        .populate("select_vehicle")
+        .populate("select_driver")
+        .sort({ _id: -1 })
+        .exec();
+    } else if (user.role === "superadmin") {
+      // Superadmins see all data
       Vehicles = await Vehicle.find().sort({ _id: 1 });
       Drivers = await Driver.find().sort({ _id: 1 });
       Bookings = await Booking.find()
@@ -43,7 +59,18 @@ const getBookings = async (req, res) => {
         .sort({ _id: -1 })
         .exec();
     }
-    return res.status(200).json({ Bookings, Vehicles, Drivers });
+    TotalBookings = await Booking.find();
+    // Find the highest booking ID
+    let highestBookingId = 0;
+    if (TotalBookings.length > 0) {
+      highestBookingId = Math.max(
+        ...TotalBookings.map((booking) => Number(booking.booking_id))
+      );
+    }
+
+    const nextBookingId = highestBookingId + 1;
+
+    return res.status(200).json({ Bookings, Vehicles, Drivers, nextBookingId });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });

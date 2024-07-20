@@ -1,6 +1,6 @@
 const Booking = require("../models/booking");
 const Driver = require("../models/driver");
-const Maintanence = require("../models/maintanence");
+const Maintenance = require("../models/maintanence");
 const User = require("../models/user");
 const Vehicle = require("../models/vehicle");
 const bcrypt = require("bcrypt");
@@ -65,6 +65,7 @@ const addUser = async (req, res) => {
 
     const newuser = new User({
       userId: userId,
+      refer_id: req.body.refer_id,
       name: req.body.name,
       email: req.body.email,
       password: hashedPassword,
@@ -115,7 +116,14 @@ const deleteUser = async (req, res) => {
 // get all users
 const users = async (req, res) => {
   try {
-    const users = await User.find().sort({ _id: 1 });
+    const userId = req.params.id;
+    const user = await User.findOne({ userId: userId });
+    let users;
+    if (user.role === "admin") {
+      users = await User.find({ refer_id: userId }).sort({ _id: 1 });
+    } else if (user.role === "superadmin") {
+      users = await User.find().sort({ _id: 1 });
+    }
     return res.status(200).json({ users });
   } catch (error) {
     console.error("Error retrieving items:", error);
@@ -131,17 +139,33 @@ const allData = async (req, res) => {
     let Drivers;
     let Bookings;
     let Maintenances;
-    if (user.role == "employee") {
+
+    if (user.role === "employee") {
+      // Employees see only their own data
       Vehicles = await Vehicle.find({ userId: userId });
       Drivers = await Driver.find({ userId: userId });
       Bookings = await Booking.find({ userId: userId });
-      Maintenances = await Maintanence.find({ userId: userId });
-    } else {
+      Maintenances = await Maintenance.find({ userId: userId });
+    } else if (user.role === "admin") {
+      // Admins see their own data and data of all users they created
+      const usersCreatedByAdmin = await User.find({ refer_id: userId });
+      const userIds = usersCreatedByAdmin.map((user) => user.userId);
+      userIds.push(userId); // Include admin's own userId
+
+      Vehicles = await Vehicle.find({ userId: userIds });
+      Drivers = await Driver.find({ userId: userIds });
+      Bookings = await Booking.find({ userId: userIds });
+      Maintenances = await Maintenance.find({
+        userId: userIds,
+      });
+    } else if (user.role === "superadmin") {
+      // Superadmins see all data
       Vehicles = await Vehicle.find();
       Drivers = await Driver.find();
       Bookings = await Booking.find();
-      Maintenances = await Maintanence.find();
+      Maintenances = await Maintenance.find();
     }
+
     return res.status(200).json({ Bookings, Vehicles, Drivers, Maintenances });
   } catch (error) {
     console.error("Error retrieving items:", error);

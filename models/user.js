@@ -6,6 +6,14 @@ const UserSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
+  locale: {
+    type: String,
+    default: "en",
+  },
+  refer_id: {
+    type: String,
+    required: true,
+  },
   name: {
     type: String,
     required: true,
@@ -21,7 +29,7 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["employee", "superadmin"],
+    enum: ["superadmin", "admin", "employee"],
     default: "employee",
   },
   isLoggedIn: {
